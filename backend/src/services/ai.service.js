@@ -104,8 +104,38 @@ const generateCategorySuggestion = async (text) => {
   }
 };
 
+const generateIssueDescription = async (prompt) => {
+  try {
+    if (!openai || !process.env.OPENAI_API_KEY) {
+      return `Detailed issue description for: ${prompt}. This is a placeholder description as OpenAI is not configured. Please provide more details about the issue including location, severity, and any relevant context.`;
+    }
+
+    const response = await openai.chat.completions.create({
+      model: 'gpt-3.5-turbo',
+      messages: [
+        {
+          role: 'system',
+          content: 'You are a helpful assistant that creates detailed, professional issue descriptions for civic reporting. Create descriptions that are clear, specific, and include relevant details about the issue, its impact, and suggested urgency level. Keep descriptions under 200 words.',
+        },
+        {
+          role: 'user',
+          content: `Create a detailed issue description for: ${prompt}`,
+        },
+      ],
+      max_tokens: 300,
+      temperature: 0.7,
+    });
+
+    return response.choices[0]?.message?.content?.trim() || `Issue description for: ${prompt}`;
+  } catch (error) {
+    console.error('OpenAI Issue Description Error:', error.message);
+    return `Issue description for: ${prompt}. This appears to be a civic issue that requires attention. Please provide more specific details about the problem, its location, and its impact on the community.`;
+  }
+};
+
 module.exports = {
   generateSummary,
   analyzeSentiment,
   generateCategorySuggestion,
+  generateIssueDescription,
 };

@@ -3,11 +3,11 @@ const router = express.Router();
 const { getUsers, createUser, createAdmin, getAllAdmins, deleteUser, deleteAdmin } = require('../controllers/admin.controller');
 const { authenticateToken, requireAdmin } = require('../middleware/auth.middleware');
 
-router.get('/users', requireAdmin, getUsers);
-router.post('/users', requireAdmin, createUser);
-router.delete('/users/:id', requireAdmin, deleteUser);
-router.post('/create', requireAdmin, createAdmin);
-router.get('/', requireAdmin, getAllAdmins);
-router.delete('/:id', requireAdmin, deleteAdmin);
+router.get('/users', authenticateToken, requireAdmin, getUsers);
+router.post('/users', authenticateToken, requireAdmin, createUser);
+router.delete('/users/:id', authenticateToken, requireAdmin, deleteUser);
+router.post('/create', authenticateToken, requireAdmin, createAdmin);
+router.get('/', authenticateToken, requireAdmin, getAllAdmins);
+router.delete('/:id', authenticateToken, requireAdmin, deleteAdmin);
 
 module.exports = router;

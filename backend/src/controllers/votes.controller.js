@@ -14,82 +14,133 @@ const createVote = async (req, res, next) => {
       });
     }
 
-    const existingVote = await Vote.findOne({
+    let vote;
+    let upvotes = 0;
+    let downvotes = 0;
+
+    const filter = {
       userId: req.user._id,
       ...(policyProposalId ? { policyProposalId } : { commentId }),
-    });
+    };
 
-    let vote;
+    const existingVote = await Vote.findOne(filter);
+
     if (existingVote) {
       if (existingVote.voteType === voteType) {
         await Vote.findByIdAndDelete(existingVote._id);
         vote = null;
+        
+        if (policyProposalId) {
+          if (voteType === 'upvote') {
+            await PolicyProposal.findByIdAndUpdate(policyProposalId, { $inc: { upvotes: -1 } });
+          } else {
+            await PolicyProposal.findByIdAndUpdate(policyProposalId, { $inc: { downvotes: -1 } });
+          }
+        }
       } else {
         existingVote.voteType = voteType;
         await existingVote.save();
         vote = existingVote;
+        
+        if (policyProposalId) {
+          if (voteType === 'upvote') {
+            await PolicyProposal.findByIdAndUpdate(policyProposalId, { 
+              $inc: { upvotes: 1, downvotes: -1 } 
+            });
+          } else {
+            await PolicyProposal.findByIdAndUpdate(policyProposalId, { 
+              $inc: { upvotes: -1, downvotes: 1 } 
+            });
+          }
+        }
       }
     } else {
-      vote = await Vote.create({
-        userId: req.user._id,
-        policyProposalId,
-        commentId,
-        voteType,
-      });
+      try {
+        vote = await Vote.create({
+          userId: req.user._id,
+          policyProposalId,
+          commentId,
+          voteType,
+        });
+        
+        if (policyProposalId) {
+          if (voteType === 'upvote') {
+            await PolicyProposal.findByIdAndUpdate(policyProposalId, { $inc: { upvotes: 1 } });
+          } else {
+            await PolicyProposal.findByIdAndUpdate(policyProposalId, { $inc: { downvotes: 1 } });
+          }
+        }
+      } catch (createError) {
+        if (createError.code === 11000) {
+          const duplicateVote = await Vote.findOne(filter);
+          if (duplicateVote) {
+            if (duplicateVote.voteType === voteType) {
+              await Vote.findByIdAndDelete(duplicateVote._id);
+              vote = null;
+              
+              if (policyProposalId) {
+                if (voteType === 'upvote') {
+                  await PolicyProposal.findByIdAndUpdate(policyProposalId, { $inc: { upvotes: -1 } });
+                } else {
+                  await PolicyProposal.findByIdAndUpdate(policyProposalId, { $inc: { downvotes: -1 } });
+                }
+              }
+            } else {
+              duplicateVote.voteType = voteType;
+              await duplicateVote.save();
+              vote = duplicateVote;
+              
+              if (policyProposalId) {
+                if (voteType === 'upvote') {
+                  await PolicyProposal.findByIdAndUpdate(policyProposalId, { 
+                    $inc: { upvotes: 1, downvotes: -1 } 
+                  });
+                } else {
+                  await PolicyProposal.findByIdAndUpdate(policyProposalId, { 
+                    $inc: { upvotes: -1, downvotes: 1 } 
+                  });
+                }
+              }
+            }
+          } else {
+            vote = null;
+          }
+        } else {
+          throw createError;
+        }
+      }
     }
 
     if (policyProposalId) {
       const proposal = await PolicyProposal.findById(policyProposalId);
-      if (proposal) {
-        const upvotes = await Vote.countDocuments({ policyProposalId, voteType: 'upvote' });
-        const downvotes = await Vote.countDocuments({ policyProposalId, voteType: 'downvote' });
-
-        proposal.upvotes = upvotes;
-        proposal.downvotes = downvotes;
-        await proposal.save();
-
-        if (vote && proposal.authorId.toString() !== req.user._id.toString()) {
-          await Notification.create({
-            userId: proposal.authorId,
-            type: 'vote_received',
-            title: 'New Vote on Your Proposal',
-            message: `Your proposal "${proposal.title}" received a ${voteType}`,
-            relatedEntityType: 'proposal',
-            relatedEntityId: proposal._id.toString(),
-          });
-        }
-      }
-
-      res.json({
-        success: true,
-        data: {
-          vote: vote ? { id: vote._id, voteType: vote.voteType } : null,
-          upvotes: proposal.upvotes,
-          downvotes: proposal.downvotes,
-        },
-        message: 'Vote updated successfully',
-      });
-    } else if (commentId) {
-      const comment = await Comment.findById(commentId);
-      if (comment) {
-        const upvotes = await Vote.countDocuments({ commentId, voteType: 'upvote' });
-        const downvotes = await Vote.countDocuments({ commentId, voteType: 'downvote' });
-
-        comment.upvotes = upvotes;
-        comment.downvotes = downvotes;
-        await comment.save();
-      }
-
-      res.json({
-        success: true,
-        data: {
-          vote: vote ? { id: vote._id, voteType: vote.voteType } : null,
-          upvotes: comment.upvotes,
-          downvotes: comment.downvotes,
-        },
-        message: 'Vote updated successfully',
-      });
+      upvotes = proposal.upvotes || 0;
+      downvotes = proposal.downvotes || 0;
     }
+
+    if (policyProposalId && vote) {
+      const proposal = await PolicyProposal.findById(policyProposalId);
+      if (proposal && proposal.authorId.toString() !== req.user._id.toString()) {
+        await Notification.create({
+          userId: proposal.authorId,
+          type: 'vote_received',
+          title: 'New Vote on Your Proposal',
+          message: `Your proposal "${proposal.title}" received a ${voteType}`,
+          relatedEntityType: 'proposal',
+          relatedEntityId: proposal._id.toString(),
+        });
+      }
+    }
+
+    res.json({
+      success: true,
+      data: {
+        vote: vote ? { id: vote._id, voteType: vote.voteType } : null,
+        upvotes: upvotes,
+        downvotes: downvotes,
+      },
+      message: 'Vote updated successfully',
+    });
+
   } catch (error) {
     next(error);
   }
