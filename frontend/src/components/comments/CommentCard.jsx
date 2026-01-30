@@ -8,6 +8,9 @@ import CommentForm from './CommentForm';
 const CommentCard = ({ comment, onUpdate }) => {
   const { user } = useAuthStore();
   const [showReply, setShowReply] = useState(false);
+  const [showReplies, setShowReplies] = useState(false);
+  const [replies, setReplies] = useState([]);
+  const [loadingReplies, setLoadingReplies] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editContent, setEditContent] = useState(comment.content);
   const [loading, setLoading] = useState(false);
@@ -23,6 +26,24 @@ const CommentCard = ({ comment, onUpdate }) => {
       console.error('Failed to delete comment:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadReplies = async () => {
+    if (showReplies) {
+      setShowReplies(false);
+      return;
+    }
+
+    try {
+      setLoadingReplies(true);
+      const response = await commentsService.getReplies(comment._id);
+      setReplies(response.data);
+      setShowReplies(true);
+    } catch (error) {
+      console.error('Failed to load replies:', error);
+    } finally {
+      setLoadingReplies(false);
     }
   };
 
@@ -100,6 +121,17 @@ const CommentCard = ({ comment, onUpdate }) => {
                 >
                   Reply
                 </button>
+                {comment.repliesCount > 0 && (
+                  <button
+                    onClick={loadReplies}
+                    className="text-sm text-gray-600 hover:underline"
+                    disabled={loadingReplies}
+                  >
+                    {loadingReplies ? 'Loading...' : 
+                     showReplies ? `Hide Replies (${comment.repliesCount})` : 
+                     `View Replies (${comment.repliesCount})`}
+                  </button>
+                )}
                 {isOwner && (
                   <>
                     <button
@@ -133,9 +165,9 @@ const CommentCard = ({ comment, onUpdate }) => {
               />
             </div>
           )}
-          {comment.replies && comment.replies.length > 0 && (
-            <div className="mt-4 ml-4 space-y-4">
-              {comment.replies.map((reply) => (
+          {showReplies && replies.length > 0 && (
+            <div className="mt-4 ml-4 space-y-4 border-l-2 border-gray-200 pl-4">
+              {replies.map((reply) => (
                 <CommentCard key={reply._id} comment={reply} onUpdate={onUpdate} />
               ))}
             </div>

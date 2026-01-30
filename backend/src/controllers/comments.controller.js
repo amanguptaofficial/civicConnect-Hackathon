@@ -10,9 +10,10 @@ const getComments = async (req, res, next) => {
     if (policyProposalId) query.policyProposalId = policyProposalId;
     if (feedbackId) query.feedbackId = feedbackId;
 
+    query.parentCommentId = { $exists: false };
+
     const comments = await Comment.find(query)
       .populate('userId', 'firstName lastName email profileImage')
-      .populate('parentCommentId')
       .sort({ createdAt: -1 })
       .limit(limit * 1)
       .skip((page - 1) * limit)
@@ -20,11 +21,9 @@ const getComments = async (req, res, next) => {
 
     const total = await Comment.countDocuments(query);
 
-    const commentsWithReplies = await Promise.all(
+    const commentsWithRepliesCount = await Promise.all(
       comments.map(async (comment) => {
-        const replies = await Comment.find({ parentCommentId: comment._id })
-          .populate('userId', 'firstName lastName email profileImage')
-          .sort({ createdAt: 1 });
+        const repliesCount = await Comment.countDocuments({ parentCommentId: comment._id });
 
         const userVote = req.user ? await Vote.findOne({
           userId: req.user._id,
@@ -33,7 +32,7 @@ const getComments = async (req, res, next) => {
 
         return {
           ...comment.toObject(),
-          replies,
+          repliesCount,
           userVote: userVote ? userVote.voteType : null,
         };
       })
@@ -41,7 +40,52 @@ const getComments = async (req, res, next) => {
 
     res.json({
       success: true,
-      data: commentsWithReplies,
+      data: commentsWithRepliesCount,
+      pagination: {
+        page: parseInt(page),
+        limit: parseInt(limit),
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const getReplies = async (req, res, next) => {
+  try {
+    const { parentCommentId } = req.params;
+    const { page = 1, limit = 10 } = req.query;
+
+    const query = { parentCommentId };
+
+    const replies = await Comment.find(query)
+      .populate('userId', 'firstName lastName email profileImage')
+      .sort({ createdAt: 1 })
+      .limit(limit * 1)
+      .skip((page - 1) * limit)
+      .exec();
+
+    const total = await Comment.countDocuments(query);
+
+    const repliesWithVotes = await Promise.all(
+      replies.map(async (reply) => {
+        const userVote = req.user ? await Vote.findOne({
+          userId: req.user._id,
+          commentId: reply._id,
+        }) : null;
+
+        return {
+          ...reply.toObject(),
+          userVote: userVote ? userVote.voteType : null,
+        };
+      })
+    );
+
+    res.json({
+      success: true,
+      data: repliesWithVotes,
       pagination: {
         page: parseInt(page),
         limit: parseInt(limit),
@@ -184,6 +228,7 @@ const deleteComment = async (req, res, next) => {
 
 module.exports = {
   getComments,
+  getReplies,
   createComment,
   updateComment,
   deleteComment,
