@@ -1,4 +1,4 @@
-export const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+export const API_BASE_URL = '/api';
 
 export const CATEGORIES = [
   { value: 'education', label: 'Education' },
@@ -40,4 +40,12 @@ export const FEEDBACK_CATEGORIES = [
   { value: 'question', label: 'Question' },
   { value: 'support', label: 'Support' },
   { value: 'opposition', label: 'Opposition' },
+];
+
+export const TIME_FILTERS = [
+  { value: '', label: 'All Time' },
+  { value: 'last_hour', label: 'Last Hour' },
+  { value: 'last_day', label: 'Last Day' },
+  { value: 'last_7_days', label: 'Last 7 Days' },
+  { value: 'last_30_days', label: 'Last 30 Days' },
 ];

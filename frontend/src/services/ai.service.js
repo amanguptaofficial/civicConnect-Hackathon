@@ -10,4 +10,9 @@ export const aiService = {
     const response = await api.post('/ai/analyze', { text });
     return response.data;
   },
+
+  generateIssueDescription: async (prompt) => {
+    const response = await api.post('/ai/generate-issue-description', { prompt });
+    return response.data;
+  },
 };

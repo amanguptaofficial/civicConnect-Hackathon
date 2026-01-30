@@ -148,11 +148,11 @@ const AdminSigninPage = () => {
               <div className="absolute inset-0 flex items-center">
                 <div className="w-full border-t border-gray-300 dark:border-gray-600"></div>
               </div>
-              <div className="relative flex justify-center text-sm">
+              {/* <div className="relative flex justify-center text-sm">
                 <span className="px-2 bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400">Or continue with</span>
-              </div>
+              </div> */}
             </div>
-            <button
+            {/* <button
               type="button"
               onClick={handleGoogleLogin}
               disabled={isLoading}
@@ -160,7 +160,7 @@ const AdminSigninPage = () => {
             >
               <IoLogoGoogle className="w-5 h-5 text-red-500" />
               <span className="font-medium text-gray-700 dark:text-gray-300">Continue with Google</span>
-            </button>
+            </button> */}
           </div>
 
           <div className="mt-6 text-center">

@@ -40,6 +40,17 @@ const ProposalDetailPage = () => {
     }
   };
 
+  const handleVoteUpdate = (voteData) => {
+    if (proposal) {
+      setProposal({
+        ...proposal,
+        upvotes: voteData.upvotes,
+        downvotes: voteData.downvotes,
+        userVote: voteData.vote?.voteType || null,
+      });
+    }
+  };
+
   const handleStatusUpdate = (newStatus) => {
     if (proposal) {
       setProposal({ ...proposal, status: newStatus });
@@ -178,7 +189,7 @@ const ProposalDetailPage = () => {
               currentVote={proposal.userVote}
               upvotes={proposal.upvotes}
               downvotes={proposal.downvotes}
-              onVoteUpdate={fetchProposal}
+              onVoteUpdate={handleVoteUpdate}
             />
             <span className="text-gray-600">👁️ {proposal.viewCount || 0} views</span>
           </div>

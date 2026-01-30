@@ -12,42 +12,31 @@ const LoginForm = () => {
   const { login, setError, error, isLoading, setLoading } = useAuthStore();
   const { register, handleSubmit, formState: { errors } } = useForm();
 
-  const handleGoogleLogin = async () => {
+  const handleGoogleLogin = () => {
     try {
       setLoading(true);
       setError(null);
       
-      if (window.google && window.google.accounts) {
-        window.google.accounts.id.initialize({
-          client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
-          callback: async (response) => {
-            try {
-              const googleData = JSON.parse(atob(response.credential.split('.')[1]));
-              const authResponse = await authService.googleLogin({
-                email: googleData.email,
-                firstName: googleData.given_name,
-                lastName: googleData.family_name,
-                profileImage: googleData.picture,
-                googleId: googleData.sub,
-              });
-              login(authResponse.data.user, authResponse.data.token);
-              const redirectPath = authResponse.data.user.role === 'policymaker' || authResponse.data.user.role === 'admin' 
-                ? '/government' 
-                : '/dashboard';
-              navigate(redirectPath);
-            } catch (err) {
-              setError('Google login failed. Please try again.');
-            } finally {
-              setLoading(false);
-            }
-          },
-        });
-        window.google.accounts.id.prompt();
-      } else {
-        setError('Google Sign-In is not available. Please use email/password login.');
+      console.log('Google Client ID:', import.meta.env.VITE_GOOGLE_CLIENT_ID);
+      
+      if (!import.meta.env.VITE_GOOGLE_CLIENT_ID) {
+        setError('Google Client ID is not configured. Please contact support.');
         setLoading(false);
+        return;
       }
+
+      const googleOAuthUrl = `https://accounts.google.com/o/oauth2/v2/auth?` +
+        `client_id=${import.meta.env.VITE_GOOGLE_CLIENT_ID}&` +
+        `redirect_uri=${encodeURIComponent(window.location.origin + '/auth/google/callback')}&` +
+        `response_type=code&` +
+        `scope=email%20profile&` +
+        `access_type=offline`;
+      
+      console.log('Redirecting to:', googleOAuthUrl);
+      window.location.href = googleOAuthUrl;
+      
     } catch (err) {
+      console.error('Google login error:', err);
       setError('Google login failed. Please try again.');
       setLoading(false);
     }

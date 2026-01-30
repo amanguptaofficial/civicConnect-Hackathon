@@ -31,8 +31,13 @@ export const authService = {
     return response.data;
   },
   
-  googleLogin: async (googleData) => {
-    const response = await api.post('/auth/google', googleData);
+  googleLogin: async (credentialData) => {
+    const response = await api.post('/auth/google', credentialData);
+    return response.data;
+  },
+
+  googleCallback: async (codeData) => {
+    const response = await api.post('/auth/google/callback', codeData);
     return response.data;
   },
 };
