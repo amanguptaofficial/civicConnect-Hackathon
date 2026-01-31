@@ -36,15 +36,14 @@ const ProposalCard = ({ proposal, onClick, onStatusUpdate }) => {
       <div className="flex items-center justify-between mt-4">
         <div className="flex items-center gap-3">
           <span
-            className={`px-3 py-1 rounded-full text-xs font-medium ${
-              category?.value === 'education'
+            className={`px-3 py-1 rounded-full text-xs font-medium ${category?.value === 'education'
                 ? 'bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200'
                 : category?.value === 'healthcare'
-                ? 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200'
-                : category?.value === 'infrastructure'
-                ? 'bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200'
-                : 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200'
-            }`}
+                  ? 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200'
+                  : category?.value === 'infrastructure'
+                    ? 'bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200'
+                    : 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200'
+              }`}
           >
             {category?.label}
           </span>
@@ -52,27 +51,32 @@ const ProposalCard = ({ proposal, onClick, onStatusUpdate }) => {
             <QuickStatusUpdate proposal={proposal} onUpdate={onStatusUpdate} />
           ) : (
             <span
-              className={`px-3 py-1 rounded-full text-xs font-medium ${
-                status?.value === 'approved'
+              className={`px-3 py-1 rounded-full text-xs font-medium ${status?.value === 'approved'
                   ? 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200'
                   : status?.value === 'pending'
-                  ? 'bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200'
-                  : status?.value === 'under_review'
-                  ? 'bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200'
-                  : status?.value === 'rejected'
-                  ? 'bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200'
-                  : status?.value === 'implemented'
-                  ? 'bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200'
-                  : 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200'
-              }`}
+                    ? 'bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200'
+                    : status?.value === 'under_review'
+                      ? 'bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200'
+                      : status?.value === 'rejected'
+                        ? 'bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200'
+                        : status?.value === 'implemented'
+                          ? 'bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200'
+                          : 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200'
+                }`}
             >
               {status?.label}
             </span>
           )}
         </div>
         <div className="flex items-center gap-4 text-sm text-gray-500 dark:text-gray-400">
-          <span>👍 {proposal.upvotes || 0}</span>
-          <span>👎 {proposal.downvotes || 0}</span>
+          <div className="flex items-center gap-1 min-w-[3rem] justify-end">
+            <span>👍</span>
+            <span className="font-medium">{proposal.upvotes || 0}</span>
+          </div>
+          <div className="flex items-center gap-1 min-w-[3rem] justify-end">
+            <span>👎</span>
+            <span className="font-medium">{proposal.downvotes || 0}</span>
+          </div>
           <span>{formatDistanceToNow(new Date(proposal.createdAt), { addSuffix: true })}</span>
         </div>
       </div>
