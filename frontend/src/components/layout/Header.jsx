@@ -59,7 +59,7 @@ const Header = () => {
             <Link to="/proposals" className="text-gray-700 dark:text-gray-300 hover:text-primary dark:hover:text-blue-400 transition-colors font-medium">
               Active Policies
             </Link>
-            <Link to="/feedback/create" className="text-gray-700 dark:text-gray-300 hover:text-primary dark:hover:text-blue-400 transition-colors font-medium">
+            <Link to="/issues" className="text-gray-700 dark:text-gray-300 hover:text-primary dark:hover:text-blue-400 transition-colors font-medium">
               Report Issue
             </Link>
             {user?.role === 'policymaker' || user?.role === 'admin' ? (
@@ -147,7 +147,7 @@ const Header = () => {
               <Link to="/proposals" className="text-gray-700 hover:text-primary font-medium">
                 Active Policies
               </Link>
-              <Link to="/feedback/create" className="text-gray-700 hover:text-primary font-medium">
+              <Link to="/issues" className="text-gray-700 hover:text-primary font-medium">
                 Report Issue
               </Link>
               {isAuthenticated && (user?.role === 'policymaker' || user?.role === 'admin') && (
@@ -174,8 +174,8 @@ const Header = () => {
                   <Link to="/login" className="text-gray-700 hover:text-primary font-medium">
                     Login
                   </Link>
-                  <Link to="/register" className="btn-primary w-full text-center">
-                    Sign Up
+                  <Link to="/register" className="text-gray-700 hover:text-primary font-medium">
+                    Register
                   </Link>
                 </>
               )}

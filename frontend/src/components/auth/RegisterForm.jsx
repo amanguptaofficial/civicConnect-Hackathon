@@ -13,39 +13,31 @@ const RegisterForm = () => {
   const { register, handleSubmit, watch, formState: { errors } } = useForm();
   const password = watch('password');
 
-  const handleGoogleSignup = async () => {
+  const handleGoogleSignup = () => {
     try {
       setLoading(true);
       setError(null);
       
-      if (window.google && window.google.accounts) {
-        window.google.accounts.id.initialize({
-          client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
-          callback: async (response) => {
-            try {
-              const googleData = JSON.parse(atob(response.credential.split('.')[1]));
-              const authResponse = await authService.googleLogin({
-                email: googleData.email,
-                firstName: googleData.given_name,
-                lastName: googleData.family_name,
-                profileImage: googleData.picture,
-                googleId: googleData.sub,
-              });
-              login(authResponse.data.user, authResponse.data.token);
-              navigate('/dashboard');
-            } catch (err) {
-              setError('Google signup failed. Please try again.');
-            } finally {
-              setLoading(false);
-            }
-          },
-        });
-        window.google.accounts.id.prompt();
-      } else {
-        setError('Google Sign-In is not available. Please use email/password signup.');
+      console.log('Google Client ID:', import.meta.env.VITE_GOOGLE_CLIENT_ID);
+      
+      if (!import.meta.env.VITE_GOOGLE_CLIENT_ID) {
+        setError('Google Client ID is not configured. Please contact support.');
         setLoading(false);
+        return;
       }
+
+      const googleOAuthUrl = `https://accounts.google.com/o/oauth2/v2/auth?` +
+        `client_id=${import.meta.env.VITE_GOOGLE_CLIENT_ID}&` +
+        `redirect_uri=${encodeURIComponent(window.location.origin + '/auth/google/callback')}&` +
+        `response_type=code&` +
+        `scope=email%20profile&` +
+        `access_type=offline`;
+      
+      console.log('Redirecting to Google OAuth for signup:', googleOAuthUrl);
+      window.location.href = googleOAuthUrl;
+      
     } catch (err) {
+      console.error('Google signup error:', err);
       setError('Google signup failed. Please try again.');
       setLoading(false);
     }

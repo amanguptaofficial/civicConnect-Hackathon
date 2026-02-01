@@ -298,7 +298,6 @@ const seedDummyData = async () => {
     await mongoose.connect(mongoUri);
     console.log('Connected to MongoDB');
 
-    // Get existing users
     const users = await User.find({});
     if (users.length < 2) {
       console.error('Error: Need at least 2 users in the database (1 citizen and 1 admin)');
@@ -311,12 +310,10 @@ const seedDummyData = async () => {
     console.log(`Using citizen: ${citizenUser.email}`);
     console.log(`Using admin: ${adminUser.email}`);
 
-    // Clear existing dummy data
     await PolicyProposal.deleteMany({});
     await Feedback.deleteMany({});
     console.log('Cleared existing proposals and feedback');
 
-    // Create proposals
     const createdProposals = [];
     for (let i = 0; i < dummyProposals.length; i++) {
       const proposalData = {
@@ -328,7 +325,6 @@ const seedDummyData = async () => {
       console.log(`Created proposal: ${proposal.title}`);
     }
 
-    // Create feedback
     for (let i = 0; i < dummyFeedback.length; i++) {
       const feedbackData = {
         ...dummyFeedback[i],

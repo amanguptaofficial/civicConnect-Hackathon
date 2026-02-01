@@ -32,6 +32,8 @@ const GovernmentDashboardPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  console.log(user)
+
   useEffect(() => {
     if (user?.role !== 'policymaker' && user?.role !== 'admin') {
       navigate('/dashboard');

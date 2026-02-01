@@ -5,8 +5,10 @@ import { adminService } from '../services/admin.service';
 import ErrorMessage from '../components/common/ErrorMessage';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 import { IoAdd, IoTrash, IoShieldCheckmark, IoMail, IoPerson } from 'react-icons/io5';
+import { useToast } from '../contexts/ToastContext';
 
 const AdminPage = () => {
+  const { showToast } = useToast();
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -18,6 +20,7 @@ const AdminPage = () => {
     lastName: '',
     role: 'policymaker',
   });
+  const [open, setOpen] = useState(false);
 
   useEffect(() => {
     fetchUsers();
@@ -29,6 +32,10 @@ const AdminPage = () => {
       const response = await adminService.getUsers();
       setUsers(response.data);
     } catch (err) {
+      showToast({
+        type: 'error',
+        message: 'Failed to fetch users',
+      });
       setError('Failed to fetch users');
     } finally {
       setLoading(false);
@@ -204,17 +211,45 @@ const AdminPage = () => {
           <div className="card bg-white dark:bg-gray-800">
             <div className="flex items-center gap-3 mb-6">
               <IoPerson className="w-6 h-6 text-green-600 dark:text-green-400" />
-              <h2 className="text-xl font-bold text-gray-900 dark:text-white">Citizen Users</h2>
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white">
+                Citizen Users
+              </h2>
             </div>
+
             {loading ? (
               <LoadingSpinner />
             ) : (
-              <div className="text-center py-8">
-                <p className="text-3xl font-bold text-gray-900 dark:text-white mb-2">{citizenUsers.length}</p>
-                <p className="text-gray-500 dark:text-gray-400">Total Citizens</p>
+              <div className="text-center">
+                <p className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+                  {citizenUsers.length}
+                </p>
+                <p className="text-gray-500 dark:text-gray-400 mb-4">
+                  Total Citizens
+                </p>
+
+                <button
+                  onClick={() => setOpen(!open)}
+                  className="w-full px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700"
+                >
+                  View Users
+                </button>
+                {open && (
+                  <div className="mt-4 max-h-60 overflow-y-auto border border-gray-200 dark:border-gray-700 rounded-md">
+                    {citizenUsers.map((user) => (
+                      <div
+                        key={user.id}
+                        className="px-4 py-2 text-left text-sm text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+                      >
+                        <p className="font-medium">{user.firstName} {user.lastName}</p>
+                        <p className="text-xs text-gray-500">{user.email}</p>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
           </div>
+
         </div>
       </div>
     </AppLayout>

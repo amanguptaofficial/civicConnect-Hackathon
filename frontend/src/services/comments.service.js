@@ -5,6 +5,11 @@ export const commentsService = {
     const response = await api.get('/comments', { params });
     return response.data;
   },
+
+  getReplies: async (parentCommentId, params = {}) => {
+    const response = await api.get(`/comments/${parentCommentId}/replies`, { params });
+    return response.data;
+  },
   
   createComment: async (commentData) => {
     const response = await api.post('/comments', commentData);

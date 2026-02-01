@@ -1,8 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AppLayout from '../components/layout/AppLayout';
 import ProposalList from '../components/proposals/ProposalList';
-import { CATEGORIES, STATUSES, PRIORITIES } from '../utils/constants';
+import { CATEGORIES, STATUSES, PRIORITIES, TIME_FILTERS } from '../utils/constants';
 import useAuthStore from '../store/authStore';
 
 const ProposalsPage = () => {
@@ -13,10 +13,33 @@ const ProposalsPage = () => {
     status: '',
     priority: '',
     search: '',
+    timeFilter: '',
   });
+  const [searchInput, setSearchInput] = useState('');
+  const debounceTimerRef = useRef(null);
+
+  useEffect(() => {
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+
+    debounceTimerRef.current = setTimeout(() => {
+      setFilters(prev => ({ ...prev, search: searchInput }));
+    }, 500);
+
+    return () => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+    };
+  }, [searchInput]);
 
   const handleFilterChange = (key, value) => {
-    setFilters({ ...filters, [key]: value });
+    if (key === 'search') {
+      setSearchInput(value);
+    } else {
+      setFilters({ ...filters, [key]: value });
+    }
   };
 
   const handleCreateClick = (e) => {
@@ -39,13 +62,13 @@ const ProposalsPage = () => {
         </div>
 
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-6 border border-gray-200 dark:border-gray-700">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Search</label>
               <input
                 type="text"
                 placeholder="Search proposals..."
-                value={filters.search}
+                value={searchInput}
                 onChange={(e) => handleFilterChange('search', e.target.value)}
                 className="input-field bg-white dark:bg-gray-700 text-gray-900 dark:text-white border-gray-300 dark:border-gray-600"
               />
@@ -91,6 +114,20 @@ const ProposalsPage = () => {
                 {PRIORITIES.map((pri) => (
                   <option key={pri.value} value={pri.value}>
                     {pri.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Time Period</label>
+              <select
+                value={filters.timeFilter}
+                onChange={(e) => handleFilterChange('timeFilter', e.target.value)}
+                className="input-field bg-white dark:bg-gray-700 text-gray-900 dark:text-white border-gray-300 dark:border-gray-600"
+              >
+                {TIME_FILTERS.map((time) => (
+                  <option key={time.value} value={time.value}>
+                    {time.label}
                   </option>
                 ))}
               </select>

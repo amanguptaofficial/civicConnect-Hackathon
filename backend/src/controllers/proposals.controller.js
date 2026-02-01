@@ -14,6 +14,7 @@ const getProposals = async (req, res, next) => {
       sortBy = 'createdAt',
       sortOrder = 'desc',
       search,
+      timeFilter,
     } = req.query;
 
     const query = { isPublic: true };
@@ -21,8 +22,38 @@ const getProposals = async (req, res, next) => {
     if (category) query.category = category;
     if (status) query.status = status;
     if (priority) query.priority = priority;
-    if (search) {
-      query.$text = { $search: search };
+    if (search && search.trim()) {
+      const searchTerm = search.trim();
+      query.$or = [
+        { title: { $regex: searchTerm, $options: 'i' } },
+        { description: { $regex: searchTerm, $options: 'i' } }
+      ];
+    }
+
+    if (timeFilter) {
+      const now = new Date();
+      let startDate;
+
+      switch (timeFilter) {
+        case 'last_hour':
+          startDate = new Date(now.getTime() - 60 * 60 * 1000);
+          break;
+        case 'last_day':
+          startDate = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+          break;
+        case 'last_7_days':
+          startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+          break;
+        case 'last_30_days':
+          startDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+          break;
+        default:
+          startDate = null;
+      }
+
+      if (startDate) {
+        query.createdAt = { $gte: startDate };
+      }
     }
 
     const sortOptions = {};

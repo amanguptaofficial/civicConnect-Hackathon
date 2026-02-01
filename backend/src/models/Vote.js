@@ -23,7 +23,13 @@ const voteSchema = new mongoose.Schema({
   timestamps: true,
 });
 
-voteSchema.index({ userId: 1, policyProposalId: 1 }, { unique: true, sparse: true });
-voteSchema.index({ userId: 1, commentId: 1 }, { unique: true, sparse: true });
+voteSchema.index({ userId: 1, policyProposalId: 1 }, { 
+  unique: true, 
+  partialFilterExpression: { policyProposalId: { $exists: true } }
+});
+voteSchema.index({ userId: 1, commentId: 1 }, { 
+  unique: true, 
+  partialFilterExpression: { commentId: { $exists: true } }
+});
 
 module.exports = mongoose.model('Vote', voteSchema);

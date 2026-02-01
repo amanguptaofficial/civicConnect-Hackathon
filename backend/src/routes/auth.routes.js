@@ -4,6 +4,7 @@ const {
   register,
   login,
   googleLogin,
+  googleCallback,
   getMe,
   updateProfile,
   forgotPassword,
@@ -15,6 +16,7 @@ const { registerValidation, loginValidation } = require('../utils/validators');
 router.post('/register', registerValidation, register);
 router.post('/login', loginValidation, login);
 router.post('/google', googleLogin);
+router.post('/google/callback', googleCallback);
 router.post('/forgot-password', forgotPassword);
 router.post('/reset-password', resetPassword);
 router.get('/me', authenticateToken, getMe);

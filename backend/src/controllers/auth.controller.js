@@ -100,9 +100,56 @@ const login = async (req, res, next) => {
   }
 };
 
-const googleLogin = async (req, res, next) => {
+const googleCallback = async (req, res, next) => {
   try {
-    const { email, firstName, lastName, profileImage, googleId } = req.body;
+    const { code } = req.body;
+
+    if (!code) {
+      return res.status(400).json({
+        success: false,
+        error: { message: 'Authorization code is required' },
+      });
+    }
+
+    const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: new URLSearchParams({
+        code,
+        client_id: process.env.GOOGLE_CLIENT_ID,
+        client_secret: process.env.GOOGLE_CLIENT_SECRET,
+        redirect_uri: process.env.FRONTEND_URL ? `${process.env.FRONTEND_URL}/auth/google/callback` : 'http://localhost:3000/auth/google/callback',
+        grant_type: 'authorization_code',
+      }),
+    });
+
+    const tokenData = await tokenResponse.json();
+
+    if (tokenData.error) {
+      return res.status(400).json({
+        success: false,
+        error: { message: tokenData.error_description || 'Failed to exchange authorization code' },
+      });
+    }
+
+    const userResponse = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
+      headers: {
+        Authorization: `Bearer ${tokenData.access_token}`,
+      },
+    });
+
+    const userData = await userResponse.json();
+
+    if (userData.error) {
+      return res.status(400).json({
+        success: false,
+        error: { message: 'Failed to get user information from Google' },
+      });
+    }
+
+    const { email, given_name: firstName, family_name: lastName, picture: profileImage, id: googleId } = userData;
 
     let user = await User.findOne({ email });
     
@@ -114,8 +161,15 @@ const googleLogin = async (req, res, next) => {
         profileImage,
         role: 'citizen',
         isVerified: true,
+        googleId,
         password: crypto.randomBytes(32).toString('hex'),
       });
+    } else {
+      user.googleId = googleId;
+      if (profileImage && !user.profileImage) {
+        user.profileImage = profileImage;
+      }
+      await user.save();
     }
 
     const token = generateToken(user._id, user.email, user.role);
@@ -136,6 +190,66 @@ const googleLogin = async (req, res, next) => {
       message: 'Login successful',
     });
   } catch (error) {
+    console.error('Google callback error:', error);
+    next(error);
+  }
+};
+
+const googleLogin = async (req, res, next) => {
+  try {
+    const { credential } = req.body;
+
+    if (!credential) {
+      return res.status(400).json({
+        success: false,
+        error: { message: 'Google credential is required' },
+      });
+    }
+
+    const decodedToken = JSON.parse(Buffer.from(credential.split('.')[1], 'base64').toString());
+    
+    const { email, given_name: firstName, family_name: lastName, picture: profileImage, sub: googleId } = decodedToken;
+
+    let user = await User.findOne({ email });
+    
+    if (!user) {
+      user = await User.create({
+        email,
+        firstName,
+        lastName,
+        profileImage,
+        role: 'citizen',
+        isVerified: true,
+        googleId,
+        password: crypto.randomBytes(32).toString('hex'),
+      });
+    } else {
+      user.googleId = googleId;
+      if (profileImage && !user.profileImage) {
+        user.profileImage = profileImage;
+      }
+      await user.save();
+    }
+
+    const token = generateToken(user._id, user.email, user.role);
+
+    res.json({
+      success: true,
+      data: {
+        user: {
+          id: user._id,
+          email: user.email,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          role: user.role,
+          profileImage: user.profileImage,
+        },
+        token,
+      },
+      message: 'Login successful',
+    });
+  } catch (error) {
+    console.error('Google login error:', error);
     next(error);
   }
 };
@@ -242,6 +356,7 @@ module.exports = {
   register,
   login,
   googleLogin,
+  googleCallback,
   getMe,
   updateProfile,
   forgotPassword,

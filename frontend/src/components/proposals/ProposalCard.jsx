@@ -17,34 +17,33 @@ const ProposalCard = ({ proposal, onClick, onStatusUpdate }) => {
       onClick={() => onClick && onClick(proposal._id)}
     >
       <div className="flex items-start justify-between mb-4">
-        <div className="flex-1">
+        <div className="flex-1 min-w-0">
           <Link
             to={`/proposals/${proposal._id}`}
-            className="text-xl font-semibold text-gray-900 dark:text-white hover:text-primary dark:hover:text-blue-400 transition-colors group-hover:underline"
+            className="text-xl font-semibold text-gray-900 dark:text-white hover:text-primary dark:hover:text-blue-400 transition-colors group-hover:underline block truncate"
           >
             {proposal.title}
           </Link>
           {proposal.aiSummary && (
             <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 line-clamp-1 flex items-center gap-1">
               <span className="text-primary dark:text-blue-400">✨</span>
-              {proposal.aiSummary}
+              <span className="truncate">{proposal.aiSummary}</span>
             </p>
           )}
           <p className="text-gray-600 dark:text-gray-300 mt-2 line-clamp-2">{proposal.description}</p>
         </div>
       </div>
-      <div className="flex items-center justify-between mt-4">
-        <div className="flex items-center gap-3">
+      <div className="flex items-start justify-between mt-4 gap-2">
+        <div className="flex items-center gap-3 flex-wrap flex-1 min-w-0">
           <span
-            className={`px-3 py-1 rounded-full text-xs font-medium ${
-              category?.value === 'education'
+            className={`px-3 py-1 rounded-full text-xs font-medium flex-shrink-0 ${category?.value === 'education'
                 ? 'bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200'
                 : category?.value === 'healthcare'
-                ? 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200'
-                : category?.value === 'infrastructure'
-                ? 'bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200'
-                : 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200'
-            }`}
+                  ? 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200'
+                  : category?.value === 'infrastructure'
+                    ? 'bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200'
+                    : 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200'
+              }`}
           >
             {category?.label}
           </span>
@@ -52,32 +51,39 @@ const ProposalCard = ({ proposal, onClick, onStatusUpdate }) => {
             <QuickStatusUpdate proposal={proposal} onUpdate={onStatusUpdate} />
           ) : (
             <span
-              className={`px-3 py-1 rounded-full text-xs font-medium ${
-                status?.value === 'approved'
+              className={`px-3 py-1 rounded-full text-xs font-medium flex-shrink-0 ${status?.value === 'approved'
                   ? 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200'
                   : status?.value === 'pending'
-                  ? 'bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200'
-                  : status?.value === 'under_review'
-                  ? 'bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200'
-                  : status?.value === 'rejected'
-                  ? 'bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200'
-                  : status?.value === 'implemented'
-                  ? 'bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200'
-                  : 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200'
-              }`}
+                    ? 'bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200'
+                    : status?.value === 'under_review'
+                      ? 'bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200'
+                      : status?.value === 'rejected'
+                        ? 'bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200'
+                        : status?.value === 'implemented'
+                          ? 'bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200'
+                          : 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200'
+                }`}
             >
               {status?.label}
             </span>
           )}
         </div>
-        <div className="flex items-center gap-4 text-sm text-gray-500 dark:text-gray-400">
-          <span>👍 {proposal.upvotes || 0}</span>
-          <span>👎 {proposal.downvotes || 0}</span>
-          <span>{formatDistanceToNow(new Date(proposal.createdAt), { addSuffix: true })}</span>
+        <div className="flex items-center gap-3 text-sm text-gray-500 dark:text-gray-400 flex-shrink-0 min-w-[12rem]">
+          <div className="flex items-center gap-1 min-w-[3rem] justify-end">
+            <span>👍</span>
+            <span className="font-medium">{proposal.upvotes || 0}</span>
+          </div>
+          <div className="flex items-center gap-1 min-w-[3rem] justify-end">
+            <span>👎</span>
+            <span className="font-medium">{proposal.downvotes || 0}</span>
+          </div>
+          <div className="min-w-[5rem] text-right">
+            <span className="truncate">{formatDistanceToNow(new Date(proposal.createdAt), { addSuffix: true })}</span>
+          </div>
         </div>
       </div>
       <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700 flex items-center justify-between text-sm text-gray-600 dark:text-gray-300">
-        <div>
+        <div className="flex items-center gap-2">
           {proposal.authorId && (
             <span>By {proposal.authorId.firstName} {proposal.authorId.lastName}</span>
           )}
